@@ -1,0 +1,84 @@
+
+st.set_page_config(page_title="Automated Answer Sheet Evaluation", page_icon="📄", layout="wide")
+
+# Hide default Streamlit menu and footer
+hide_streamlit_style = """
+    <style>
+    
+    [data-testid="stSidebarNav"] {display: none;}
+    </style>
+"""
+st.html(hide_streamlit_style,)#) unsafe_allow_html=True)
+
+# Session state management
+if 'authentication_status' not in st.session_state:
+    st.session_state['authentication_status'] = False
+    st.session_state['user'] = None
+    st.session_state['profile'] = None
+
+def hash_password(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+def login():
+    st.title("Welcome to Automated Answer Sheet Evaluation System")
+    menu = ["Login/Register", "About", "Future Scope"]
+    choice = st.sidebar.selectbox("Start Here", menu)
+
+    if choice == "Login/Register":
+        r1, r2 = st.tabs(['Login', 'Register'])
+        with r1:
+            st.subheader("Login Section")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type='password')
+            if st.button("Login"):
+                hashed_pswd = hash_password(password)
+                user = authenticate_user(username, hashed_pswd)
+                if user:
+                    profile = get_user_profile(user)
+                    st.session_state['authentication_status'] = True
+                    st.session_state['user'] = user
+                    st.session_state['profile'] = profile
+                    st.success(f"Logged in as {user.role}")
+                    st.rerun()
+                else:
+                    st.error("Invalid Username/Password")
+
+        with r2:
+            st.subheader("Create New Account")
+            role = st.selectbox("Select Role", ["Student", "Evaluator"])
+            first_name = st.text_input("First Name")
+            last_name = st.text_input("Last Name")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type='password')
+            confirm_password = st.text_input("Confirm Password", type='password')
+
+            if role == "Student":
+                register_number = st.text_input("Register Number")
+                course_ids = st.multiselect("Course(s) Enrolled", list(COURSE.keys()))
+
+                if st.button("Register"):
+                    if password == confirm_password:
+                        hashed_pswd = hash_password(password)
+                        success, message = register_student(username, hashed_pswd, first_name, last_name, register_number, ",".join(course_ids))
+                        if success:
+                            st.success(message)
+                            st.info("Go to Login Menu to login")
+                        else:
+                            st.error(message)
+                    else:
+                        st.error("Passwords do not match")
+
+            elif role == "Evaluator":
+                course_ids = st.multiselect("Course(s) Teaching", list(COURSE.keys()))
+
+                if st.button("Register"):
+                    if password == confirm_password:
+                        hashed_pswd = hash_password(password)
+                        success, message = register_evaluator(username, hashed_pswd, first_name, last_name, ",".join(course_ids))
+                        if success:
+                            st.success(message)
+                            st.info("Go to Login Menu to login")
+                        else:
+                            st.error(message)
+                    else:
+                        st.error("Passwords do not match")
