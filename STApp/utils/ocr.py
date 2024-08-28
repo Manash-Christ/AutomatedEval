@@ -9,7 +9,7 @@ import streamlit as st
 import google
 
 
-GOOGLE_API_KEY = "AIzaSyCr04_iyPZP6Dx2dB5JpUAqd3A1sJa9U0A"
+GOOGLE_API_KEY = "Your_Key"
 google.generativeai.configure(api_key=GOOGLE_API_KEY)
 
 
